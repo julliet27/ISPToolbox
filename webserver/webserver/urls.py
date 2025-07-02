@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from IspToolboxAccounts.views import IntegrationTestAccountLoginView
+#####
 from django.conf.urls import (
     handler404, handler500, handler403, url
 )
@@ -38,6 +40,10 @@ from django.urls import path, include, re_path
 from IspToolboxApp import views
 from django.views.decorators.cache import cache_page
 from django_js_reverse import views as reverse_views
+
+# workspace/urls.py or webserver/urls.py
+
+
 
 
 # REST API Router
@@ -152,6 +158,15 @@ urlpatterns += reverse_url
 if settings.PROD:
     # Admin SSO
     urlpatterns += [path('saml2/', include(('djangosaml2.urls', 'djangosaml2'), namespace='saml2'))]
+
+# if settings.PROD:
+#     login_url = reverse_lazy("saml2:saml2_login")
+# else:
+#     login_url = reverse_lazy("login")  # or any fallback
+
+# admin_required = user_passes_test(admin_test, login_url=login_url)
+
+
 
 
 handler500 = 'workspace.views.Error500View'  # noqa

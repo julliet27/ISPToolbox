@@ -6,6 +6,7 @@ from django.http.request import HttpRequest
 from django.core.exceptions import PermissionDenied
 from django.urls.base import reverse_lazy
 from IspToolboxAccounts import models
+from django.shortcuts import redirect
 
 
 admin.site.register(models.PageVisit)
@@ -54,12 +55,23 @@ admin.site.register(models.IspToolboxUserSignUpInfo)
 
 # Redirect admin login through SAML, with 403 forbidden if user is not a superuser
 def admin_test(user):
+    from django.contrib.auth.models import AnonymousUser
+    print("--------------admin_test")
+
+    if isinstance(user, AnonymousUser):
+        return True
     if user.is_active:
         if user.is_staff:
             return True
         else:
             raise PermissionDenied
     return False
+    # if user.is_active:
+    #     if user.is_staff:
+    #         return True
+    #     else:
+    #         raise PermissionDenied
+    # return False
 
 
 admin_required = user_passes_test(admin_test, login_url=reverse_lazy('saml2:saml2_login'))

@@ -1,6 +1,7 @@
 {% load socialaccount %}
 {% load static settings %}
-{% providers_media_js %}
+{% comment %} {% providers_media_js %} {% endcomment %}
+
 
 <div id="fb_sign_up_container" class="{% if not showSignUp or showEmailSignUp %}d-none{% endif %}">
     <div class="container signup_container onboarding_container">
