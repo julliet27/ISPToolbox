@@ -231,7 +231,7 @@ else:
     LOGIN_URL = "/login/"
     ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 ##
-print('---------------------LOGIN_URL', LOGIN_URL)
+
 
 
 GUEST_USER_CONVERT_URL = LOGIN_URL

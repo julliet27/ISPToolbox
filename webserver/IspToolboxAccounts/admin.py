@@ -56,7 +56,7 @@ admin.site.register(models.IspToolboxUserSignUpInfo)
 # Redirect admin login through SAML, with 403 forbidden if user is not a superuser
 def admin_test(user):
     from django.contrib.auth.models import AnonymousUser
-    print("--------------admin_test")
+    
 
     if isinstance(user, AnonymousUser):
         return True

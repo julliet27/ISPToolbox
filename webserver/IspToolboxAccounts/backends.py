@@ -14,26 +14,18 @@ from IspToolboxAccounts.utils import enable_account_creation
 
 class EmailBackend(ModelBackend):
     def authenticate(self, request, email=None, password=None, **kwargs):
-        print("------------------------in authenticate----------------------")
-        print("request-----", request)
-        print("-------------", request.POST)
-        print("------------email", email)
-        print("a new line.........")
-        print("------------passwrd", password)
+
 
         email = email if email else request.POST.get("username")
-        print("------------post email------", email)
+       
         try:
             user = UserModel.objects.get(Q(email__iexact=email))
-            print("-----------------user", user)
-            print("----------user.email", user.email)
+
         except UserModel.DoesNotExist as e:
-            print("----------exception ------------------", e)
+           
             UserModel().set_password(password)
         else:
-            print("------------------else----------------")
-            print("-------------user.check_password(password)", user.check_password(password))
-            print("----------------self.user_can_authenticate(user)", self.user_can_authenticate(user))
+
             if user.check_password(password) and self.user_can_authenticate(user):
                 return user
 

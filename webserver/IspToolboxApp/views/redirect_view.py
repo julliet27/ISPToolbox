@@ -13,7 +13,7 @@ from django.views import View
 
 class HomepageRedirect(View):
     def get(self, request):
-        print("------------------get workspace home page..............")
+        
         return render(request, 'workspace/pages/dashboard.html') 
 
 
