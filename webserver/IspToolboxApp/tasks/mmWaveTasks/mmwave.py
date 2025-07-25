@@ -91,3 +91,41 @@ def getAreaOfInterest(areaOfInterest: List, source: str = 'osm') -> Dict:
     else:
         logging.info('Using ML Generated Footprints')
         return []
+
+# import os
+# import json
+# import logging
+# from shapely.geometry import shape, box
+# from typing import List, Dict
+
+# def getAreaOfInterest(areaOfInterest: List, source: str = 'osm', state: str = 'Alaska') -> Dict:
+#     logging.info(areaOfInterest)
+
+#     if source == "microsoft":
+#         logging.info('Using Microsoft Footprints')
+
+#         # Compute full path to GeoJSON file relative to this script
+#         base_dir = os.path.dirname(os.path.abspath(__file__))
+#         filepath = os.path.join(base_dir, "data", f"{state}.geojson")
+
+#         if not os.path.exists(filepath):
+#             logging.error(f"GeoJSON file not found: {filepath}")
+#             return {"type": "GeometryCollection", "geometries": []}
+
+#         with open(filepath, "r") as f:
+#             data = json.load(f)
+
+#         bbox = box(areaOfInterest[1], areaOfInterest[0], areaOfInterest[3], areaOfInterest[2])
+#         geometries = []
+
+#         for feature in data["features"]:
+#             geom = shape(feature["geometry"])
+#             if geom.intersects(bbox):
+#                 clipped = geom.intersection(bbox)
+#                 geometries.append(clipped.__geo_interface__)
+
+#         return {
+#             "type": "GeometryCollection",
+#             "geometries": geometries
+#         }
+

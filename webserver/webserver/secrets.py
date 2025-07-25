@@ -37,7 +37,7 @@ def get_secret(secret_name):
             "MAPBOX_ACCESS_TOKEN_BACKEND": "pk.test.token",
             "MAPBOX_ACCOUNT_PASSWORD": "test-password",
             "MAPBOX_ACCOUNT_EMAIL": "test@example.com",
-            "MAPBOX_PUBLIC_ACCESS_TOKEN_ALLOW_ALL_URL": "pk.public.allow.url",
+            "MAPBOX_PUBLIC_ACCESS_TOKEN_ALLOW_ALL_URL": "pk.eyJ1IjoiaXNwdG9vbGJveCIsImEiOiJja2p5eHd1aGcwMjhoMm5wcGkxdnl4N2htIn0.cLO8vp0k2kXclp4CNzwWhQ",
             "MAPBOX_PUBLIC_ACCESS_TOKEN_FB_ISPTOOLBOX_URL": "pk.public.fb.url",
             "TILESET_LAMBDA_EDGE_SECRET": "tileset-secret",
             "cloud_rf_uid": "cloudrf-uid",

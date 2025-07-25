@@ -1,0 +1,377 @@
+diff --git a/docker-compose.dev.yml b/docker-compose.dev.yml
+index cc45a09d..dd532045 100644
+--- a/docker-compose.dev.yml
++++ b/docker-compose.dev.yml
+@@ -11,6 +11,7 @@ services:
+     environment:
+       COVERAGE_RCFILE: "/opt/.coveragerc"
+       DEBUG: "TRUE"
++      DJANGO_EXTENSIONS: "true" 
+     volumes:
+       - ./webserver:/usr/src/app
+       - ./coverage:/opt/coverage
+@@ -21,7 +22,9 @@ services:
+     depends_on:
+       - static
+   websocket-app:
+-    command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --  daphne -e ssl:8010:privateKey=key.pem:certKey=cert.pem webserver.asgi:application --access-log /dev/stdout
++    # command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --  daphne -e ssl:8010:privateKey=key.pem:certKey=cert.pem webserver.asgi:application --access-log /dev/stdout
++    command: daphne -b 0.0.0.0 -p 8010 webserver.asgi:application
++
+     environment:
+       DEBUG: "TRUE"
+     volumes:
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 8f3b7974..e528ad35 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -60,6 +60,7 @@ services:
+       - ./webserver:/usr/src/app
+       - ./coverage:/opt/coverage
+       - ./scripts:/opt/scripts
++    mem_limit: 4g # Limit memory usage to 4GB
+ 
+ #-----#
+   # django-debug:
+diff --git a/nginx/nginx.default b/nginx/nginx.default
+index ace7a11f..e7caad80 100644
+--- a/nginx/nginx.default
++++ b/nginx/nginx.default
+@@ -18,6 +18,7 @@ server {
+     }
+ 
+     location / {
++        client_max_body_size 2048M;
+         proxy_redirect off;
+         proxy_set_header Host $http_host;
+         proxy_set_header X-Forwarded-Proto 'http';
+diff --git a/webserver/IspToolboxApp/tasks/mmWaveTasks/mmwave.py b/webserver/IspToolboxApp/tasks/mmWaveTasks/mmwave.py
+index 440a179f..eaabddb0 100644
+--- a/webserver/IspToolboxApp/tasks/mmWaveTasks/mmwave.py
++++ b/webserver/IspToolboxApp/tasks/mmWaveTasks/mmwave.py
+@@ -91,3 +91,41 @@ def getAreaOfInterest(areaOfInterest: List, source: str = 'osm') -> Dict:
+     else:
+         logging.info('Using ML Generated Footprints')
+         return []
++
++# import os
++# import json
++# import logging
++# from shapely.geometry import shape, box
++# from typing import List, Dict
++
++# def getAreaOfInterest(areaOfInterest: List, source: str = 'osm', state: str = 'Alaska') -> Dict:
++#     logging.info(areaOfInterest)
++
++#     if source == "microsoft":
++#         logging.info('Using Microsoft Footprints')
++
++#         # Compute full path to GeoJSON file relative to this script
++#         base_dir = os.path.dirname(os.path.abspath(__file__))
++#         filepath = os.path.join(base_dir, "data", f"{state}.geojson")
++
++#         if not os.path.exists(filepath):
++#             logging.error(f"GeoJSON file not found: {filepath}")
++#             return {"type": "GeometryCollection", "geometries": []}
++
++#         with open(filepath, "r") as f:
++#             data = json.load(f)
++
++#         bbox = box(areaOfInterest[1], areaOfInterest[0], areaOfInterest[3], areaOfInterest[2])
++#         geometries = []
++
++#         for feature in data["features"]:
++#             geom = shape(feature["geometry"])
++#             if geom.intersects(bbox):
++#                 clipped = geom.intersection(bbox)
++#                 geometries.append(clipped.__geo_interface__)
++
++#         return {
++#             "type": "GeometryCollection",
++#             "geometries": geometries
++#         }
++
+diff --git a/webserver/IspToolboxApp/templates/mmWave/login_modal.html b/webserver/IspToolboxApp/templates/mmWave/login_modal.html
+index aedd86ce..b6d01928 100644
+--- a/webserver/IspToolboxApp/templates/mmWave/login_modal.html
++++ b/webserver/IspToolboxApp/templates/mmWave/login_modal.html
+@@ -1,6 +1,6 @@
+ <!-- Modal -->
+ {% load socialaccount %}
+-{% providers_media_js %}
++{% comment %}{% providers_media_js %}{% endcomment %}
+ 
+ <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+     <div class="modal-dialog modal-dialog-centered">
+diff --git a/webserver/mmwave/forms/upload_aoi.py b/webserver/mmwave/forms/upload_aoi.py
+index 7b4041b8..9442bf5b 100644
+--- a/webserver/mmwave/forms/upload_aoi.py
++++ b/webserver/mmwave/forms/upload_aoi.py
+@@ -12,11 +12,13 @@ class DSMExportAOIFileForm(forms.Form):
+     file = forms.FileField(validators=[validate_file])
+ 
+     def convertToAOI(self):
++        print("Converting uploaded file to AOI")
+         file_submitted = self.files.get('file', None)
+         if file_submitted.name.endswith('geojson'):
+             # Load geojson from file and create AOI
+             geojson = json.load(file_submitted)
+             geojson_type = geojson.get('type', None)
++            # print(geojson_type.lower() == 'feature')
+             if (
+                     isinstance(geojson_type, str) and (
+                         geojson_type.lower() == 'featurecollection' or
+@@ -24,7 +26,10 @@ class DSMExportAOIFileForm(forms.Form):
+             ):
+                 raise DSMException(
+                     'GeoJSON cannot be type FeatureCollection or Feature')
+-            return geojson
++            
++            print("----------------GeoJSON type:", geojson_type)
++            # return geojson
++            return geojson['geometry']
+         elif file_submitted.name.endswith('kml'):
+             kmlfile = ElementTree.parse(file_submitted)
+             geometries = createGeoJsonsFromKML(kmlfile)
+diff --git a/webserver/mmwave/templates/mmwave/organisms/export_dsm_modal.html b/webserver/mmwave/templates/mmwave/organisms/export_dsm_modal.html
+index 0aca6646..4c9434c4 100644
+--- a/webserver/mmwave/templates/mmwave/organisms/export_dsm_modal.html
++++ b/webserver/mmwave/templates/mmwave/organisms/export_dsm_modal.html
+@@ -48,7 +48,7 @@
+         </button>
+       </div>
+       <div class="modal-body">
+-        <p>Select a geojson (GeometryCollection) or kml file with a polygon in it.</p>
++        <p>Select a geojson (GeometryCollection) or kml file with a polygon in it for tesing........</p>
+       <form enctype="multipart/form-data"  action="/pro/workspace/api/dsm-export/" method="POST"
+         id="dsm_upload_form"
+       >
+diff --git a/webserver/mmwave/views/demo_views.py b/webserver/mmwave/views/demo_views.py
+index 12cb391b..eff01bf2 100644
+--- a/webserver/mmwave/views/demo_views.py
++++ b/webserver/mmwave/views/demo_views.py
+@@ -106,6 +106,7 @@ class DSMExportView(View):
+     """
+ 
+     def get(self, request):
++        print("--------------loading dsm app-----------------")
+         lat = request.GET.get('lat', None)
+         lon = request.GET.get('lon', None)
+ 
+@@ -129,35 +130,46 @@ class CreateExportDSM(View):
+         """
+         """
+         try:
++            print("--------------uploading dsm data-----------------")
+             aoi_form = DSMExportAOIFileForm(request.POST, request.FILES)
++            print("--------------aoi form valid-----------------")
+             request_area = None
+             if aoi_form.is_valid():
++                print("--------------aoi form is valid-----------------")
+                 request_area = GEOSGeometry(
+                     json.dumps(aoi_form.convertToAOI()))
+             else:
+                 request_area = GEOSGeometry(json.dumps(
+                     json.load(request).get('aoi', {})
+                 ))
++            print("--------------request area created-----------------")
+             # Start pipeline - return credentials + uuid
+             conversion = DSMConversionJob(area_of_interest=request_area)
+             conversion.save()
+-            valid_request, reason = conversion.isValidRequest()
++            valid_request, reason = conversion.isValidReFquest()
+             if not valid_request:
+                 raise DSMException(reason)
++            print("--------------conversion job created-----------------")
+             task = exportDSMData.delay(conversion.uuid)
+             conversion.task = task.id
+             conversion.save()
++            print("--------------dsm data export task started-----------------")
+             return JsonResponse({'uuid': conversion.uuid, 'access_token': conversion.access_token})
+         except DSMException as e:
+             return JsonResponse({'error': str(e)})
+-        except Exception:
++        except Exception as e:
++            print(f"Unexpected error: {e}")
++            
+             return JsonResponse({'error': 'An unexpected error occured'})
+ 
+     def get(self, request, uuid=None):
++        print("--------------getting dsm data-----------------")
+         job = DSMConversionJob.objects.filter(uuid=uuid).get()
+         if job is None or not job.isRequestAuthorized(request):
+             return HttpResponseForbidden()
+         job_status = job.getTaskStatus()
++
++        print(f"DSM job status: {job_status}")
+         return JsonResponse({
+             'status': job_status,
+             'error': job.error,
+diff --git a/webserver/requirements.txt b/webserver/requirements.txt
+index c3f42ca4..c0c7b41b 100644
+--- a/webserver/requirements.txt
++++ b/webserver/requirements.txt
+@@ -107,3 +107,4 @@ xmltodict==0.12.0
+ zipp==3.5.0
+ debugpy
+ dotenv
++django-extensions==3.1.4 
+\ No newline at end of file
+diff --git a/webserver/static/isptoolbox/src/LinkCheckPage.ts b/webserver/static/isptoolbox/src/LinkCheckPage.ts
+index dd3853eb..b496546f 100644
+--- a/webserver/static/isptoolbox/src/LinkCheckPage.ts
++++ b/webserver/static/isptoolbox/src/LinkCheckPage.ts
+@@ -101,7 +101,7 @@ Object.keys(center_freq_values).forEach((k: string) => {
+ });
+ 
+ const DEFAULT_LINK_FREQ = center_freq_values['5 GHz'];
+-const DEFAULT_RADIO_HEIGHT = ft2m(60);
++const DEFAULT_RADIO_HEIGHT = ft2m(30);
+ const DEFAULT_RADIO_0_NAME = 'radio_0';
+ const DEFAULT_RADIO_1_NAME = 'radio_1';
+ 
+diff --git a/webserver/static/isptoolbox/src/apps/IspToolboxDSMApp.ts b/webserver/static/isptoolbox/src/apps/IspToolboxDSMApp.ts
+index 0a89b724..56263b99 100644
+--- a/webserver/static/isptoolbox/src/apps/IspToolboxDSMApp.ts
++++ b/webserver/static/isptoolbox/src/apps/IspToolboxDSMApp.ts
+@@ -59,7 +59,9 @@ export default class DSMExportApp {
+             this.map.on('draw.create', this.drawCreateCallback.bind(this));
+             this.map.on('draw.modechange', this.drawChangeModeCallback.bind(this));
+         });
++        console.log('-------------Upload form initialized');
+         this.uploadform = new DSMUploadAOIForm('#dsm_upload_form');
++        console.log('-------------DSMExportApp initialized');
+         PubSub.subscribe(DSMExportEvents.UPLOADED, this.uploadReceived.bind(this));
+         $('#draw-polygon-button').on('click', () => {
+             this.draw.changeMode('draw_polygon');
+@@ -105,6 +107,7 @@ export default class DSMExportApp {
+         this.renderErrorMessage(null);
+         // @ts-ignore
+         const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
++        console.log('Exporting DSM for area:', polygon);
+         $.ajax({
+             url: '/pro/workspace/api/dsm-export/',
+             method: 'POST',
+@@ -137,6 +140,7 @@ export default class DSMExportApp {
+ 
+     pollResult(uuid: string, token: string) {
+         const checkResult = (uuid: string, token: string) => {
++            console.log(`Checking result for UUID: ${uuid}`);
+             $.ajax({
+                 url: `/pro/workspace/api/dsm-export/${uuid}/`,
+                 method: 'GET',
+@@ -203,6 +207,12 @@ class DSMUploadAOIForm {
+         });
+         const url = form.getAttribute('action');
+         const method = form.getAttribute('method');
++        
++        console.log('Submitting DSM upload form', {
++            url,
++            method
++        });
++
+         if (method && url) {
+             const csrf =
+                 // @ts-ignore
+diff --git a/webserver/webserver/secrets.py b/webserver/webserver/secrets.py
+index d634b2de..685b96d2 100644
+--- a/webserver/webserver/secrets.py
++++ b/webserver/webserver/secrets.py
+@@ -37,7 +37,7 @@ def get_secret(secret_name):
+             "MAPBOX_ACCESS_TOKEN_BACKEND": "pk.test.token",
+             "MAPBOX_ACCOUNT_PASSWORD": "test-password",
+             "MAPBOX_ACCOUNT_EMAIL": "test@example.com",
+-            "MAPBOX_PUBLIC_ACCESS_TOKEN_ALLOW_ALL_URL": "pk.public.allow.url",
++            "MAPBOX_PUBLIC_ACCESS_TOKEN_ALLOW_ALL_URL": "pk.eyJ1IjoiaXNwdG9vbGJveCIsImEiOiJja2p5eHd1aGcwMjhoMm5wcGkxdnl4N2htIn0.cLO8vp0k2kXclp4CNzwWhQ",
+             "MAPBOX_PUBLIC_ACCESS_TOKEN_FB_ISPTOOLBOX_URL": "pk.public.fb.url",
+             "TILESET_LAMBDA_EDGE_SECRET": "tileset-secret",
+             "cloud_rf_uid": "cloudrf-uid",
+diff --git a/webserver/webserver/settings.py b/webserver/webserver/settings.py
+index 72c6ac8b..4543e6df 100644
+--- a/webserver/webserver/settings.py
++++ b/webserver/webserver/settings.py
+@@ -163,7 +163,12 @@ INSTALLED_APPS = [
+     "ajax_datatable",
+     # htmx
+     "django_htmx",
++    # "django_extensions",
+ ]
++
++# if os.environ.get("DJANGO_EXTENSIONS", "false").lower() == "true":
++INSTALLED_APPS += ["django_extensions"]
++
+ if PROD:
+     # SSO
+     INSTALLED_APPS += ["djangosaml2"]
+@@ -215,21 +220,25 @@ if PROD:
+     )
+ 
+ 
+-# LOGIN_REDIRECT_URL = "/pro"
+-# ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
+-# LOGIN_URL = "/pro/signin/"
+-# ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
++LOGIN_REDIRECT_URL = "/pro"
++ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
++
++LOGIN_URL = "/pro/signin/"
++ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
+ 
+ ##
+ 
+-if PROD:
+-    LOGIN_REDIRECT_URL = "/pro"
+-    LOGIN_URL = "/pro/signin/"
+-    ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
+-else:
+-    LOGIN_REDIRECT_URL = "/"
+-    LOGIN_URL = "/login/"
+-    ACCOUNT_SIGNUP_REDIRECT_URL = "/"
++# if PROD:
++#     LOGIN_REDIRECT_URL = "/pro"
++#     ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
++#     LOGIN_URL = "/pro/signin/"
++#     LOGOUT_REDIRECT_URL = "/pro/signin/"
++#     ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
++# else:
++#     LOGIN_REDIRECT_URL = "/"
++#     LOGIN_URL = "/"
++#     LOGOUT_REDIRECT_URL = "/"
++#     ACCOUNT_SIGNUP_REDIRECT_URL = "/"
+ ##
+ 
+ 
+diff --git a/webserver/workspace/templates/workspace/pages/network_edit.html b/webserver/workspace/templates/workspace/pages/network_edit.html
+index bf2d8d2c..e4e07914 100644
+--- a/webserver/workspace/templates/workspace/pages/network_edit.html
++++ b/webserver/workspace/templates/workspace/pages/network_edit.html
+@@ -26,6 +26,10 @@
+   </div>
+ 
+   {{ geojson|json_script:"isp-map-features" }}
++
++  <script>
++    window.mapbox_access_token = "{{ MAPBOX_ACCESS_TOKEN_PUBLIC }}";
++  </script>
+   
+   {% include "workspace/organisms/nux_network.html" %}
+ 
+diff --git a/webserver/workspace/views/network_views.py b/webserver/workspace/views/network_views.py
+index 8dfbbc75..eb75bd8d 100644
+--- a/webserver/workspace/views/network_views.py
++++ b/webserver/workspace/views/network_views.py
+@@ -4,6 +4,7 @@ from django.shortcuts import render, redirect
+ from django.views import View
+ from django.contrib.gis.geos import Point
+ from django.shortcuts import get_object_or_404
++from django.conf import settings
+ 
+ import csv
+ from workspace.models import AccessPointLocation, WorkspaceMapSession
+@@ -90,5 +91,6 @@ class EditNetworkView(AllowGuestUserMixin, View):
+             "title": "LiDAR LOS Check - ISP Toolbox",
+             "tool": "los_check",
+             "demo_network_view": False,
++            "MAPBOX_ACCESS_TOKEN_PUBLIC": settings.MAPBOX_ACCESS_TOKEN_PUBLIC, 
+         }
+         return render(request, "workspace/pages/network_edit.html", context)

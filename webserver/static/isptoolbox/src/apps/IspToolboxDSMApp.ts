@@ -59,7 +59,9 @@ export default class DSMExportApp {
             this.map.on('draw.create', this.drawCreateCallback.bind(this));
             this.map.on('draw.modechange', this.drawChangeModeCallback.bind(this));
         });
+        console.log('-------------Upload form initialized');
         this.uploadform = new DSMUploadAOIForm('#dsm_upload_form');
+        console.log('-------------DSMExportApp initialized');
         PubSub.subscribe(DSMExportEvents.UPLOADED, this.uploadReceived.bind(this));
         $('#draw-polygon-button').on('click', () => {
             this.draw.changeMode('draw_polygon');
@@ -105,6 +107,7 @@ export default class DSMExportApp {
         this.renderErrorMessage(null);
         // @ts-ignore
         const csrf = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+        console.log('Exporting DSM for area:', polygon);
         $.ajax({
             url: '/pro/workspace/api/dsm-export/',
             method: 'POST',
@@ -137,6 +140,7 @@ export default class DSMExportApp {
 
     pollResult(uuid: string, token: string) {
         const checkResult = (uuid: string, token: string) => {
+            console.log(`Checking result for UUID: ${uuid}`);
             $.ajax({
                 url: `/pro/workspace/api/dsm-export/${uuid}/`,
                 method: 'GET',
@@ -203,6 +207,12 @@ class DSMUploadAOIForm {
         });
         const url = form.getAttribute('action');
         const method = form.getAttribute('method');
+        
+        console.log('Submitting DSM upload form', {
+            url,
+            method
+        });
+
         if (method && url) {
             const csrf =
                 // @ts-ignore

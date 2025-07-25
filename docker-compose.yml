@@ -60,6 +60,7 @@ services:
       - ./webserver:/usr/src/app
       - ./coverage:/opt/coverage
       - ./scripts:/opt/scripts
+    mem_limit: 4g # Limit memory usage to 4GB
 
 #-----#
   # django-debug:

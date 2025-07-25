@@ -12,11 +12,13 @@ class DSMExportAOIFileForm(forms.Form):
     file = forms.FileField(validators=[validate_file])
 
     def convertToAOI(self):
+        print("Converting uploaded file to AOI")
         file_submitted = self.files.get('file', None)
         if file_submitted.name.endswith('geojson'):
             # Load geojson from file and create AOI
             geojson = json.load(file_submitted)
             geojson_type = geojson.get('type', None)
+            # print(geojson_type.lower() == 'feature')
             if (
                     isinstance(geojson_type, str) and (
                         geojson_type.lower() == 'featurecollection' or
@@ -24,7 +26,10 @@ class DSMExportAOIFileForm(forms.Form):
             ):
                 raise DSMException(
                     'GeoJSON cannot be type FeatureCollection or Feature')
-            return geojson
+            
+            print("----------------GeoJSON type:", geojson_type)
+            # return geojson
+            return geojson['geometry']
         elif file_submitted.name.endswith('kml'):
             kmlfile = ElementTree.parse(file_submitted)
             geometries = createGeoJsonsFromKML(kmlfile)

@@ -163,7 +163,12 @@ INSTALLED_APPS = [
     "ajax_datatable",
     # htmx
     "django_htmx",
+    # "django_extensions",
 ]
+
+# if os.environ.get("DJANGO_EXTENSIONS", "false").lower() == "true":
+INSTALLED_APPS += ["django_extensions"]
+
 if PROD:
     # SSO
     INSTALLED_APPS += ["djangosaml2"]
@@ -215,21 +220,25 @@ if PROD:
     )
 
 
-# LOGIN_REDIRECT_URL = "/pro"
-# ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
-# LOGIN_URL = "/pro/signin/"
-# ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
+LOGIN_REDIRECT_URL = "/pro"
+ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
+
+LOGIN_URL = "/pro/signin/"
+ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
 
 ##
 
-if PROD:
-    LOGIN_REDIRECT_URL = "/pro"
-    LOGIN_URL = "/pro/signin/"
-    ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
-else:
-    LOGIN_REDIRECT_URL = "/"
-    LOGIN_URL = "/login/"
-    ACCOUNT_SIGNUP_REDIRECT_URL = "/"
+# if PROD:
+#     LOGIN_REDIRECT_URL = "/pro"
+#     ACCOUNT_LOGOUT_REDIRECT_URL = "/pro/signin/"
+#     LOGIN_URL = "/pro/signin/"
+#     LOGOUT_REDIRECT_URL = "/pro/signin/"
+#     ACCOUNT_SIGNUP_REDIRECT_URL = "/pro/optional-info/"
+# else:
+#     LOGIN_REDIRECT_URL = "/"
+#     LOGIN_URL = "/"
+#     LOGOUT_REDIRECT_URL = "/"
+#     ACCOUNT_SIGNUP_REDIRECT_URL = "/"
 ##
 
 

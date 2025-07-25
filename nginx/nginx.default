@@ -18,6 +18,7 @@ server {
     }
 
     location / {
+        client_max_body_size 2048M;
         proxy_redirect off;
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-Proto 'http';

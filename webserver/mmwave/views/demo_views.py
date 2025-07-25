@@ -106,6 +106,7 @@ class DSMExportView(View):
     """
 
     def get(self, request):
+        print("--------------loading dsm app-----------------")
         lat = request.GET.get('lat', None)
         lon = request.GET.get('lon', None)
 
@@ -129,35 +130,46 @@ class CreateExportDSM(View):
         """
         """
         try:
+            print("--------------uploading dsm data-----------------")
             aoi_form = DSMExportAOIFileForm(request.POST, request.FILES)
+            print("--------------aoi form valid-----------------")
             request_area = None
             if aoi_form.is_valid():
+                print("--------------aoi form is valid-----------------")
                 request_area = GEOSGeometry(
                     json.dumps(aoi_form.convertToAOI()))
             else:
                 request_area = GEOSGeometry(json.dumps(
                     json.load(request).get('aoi', {})
                 ))
+            print("--------------request area created-----------------")
             # Start pipeline - return credentials + uuid
             conversion = DSMConversionJob(area_of_interest=request_area)
             conversion.save()
-            valid_request, reason = conversion.isValidRequest()
+            valid_request, reason = conversion.isValidReFquest()
             if not valid_request:
                 raise DSMException(reason)
+            print("--------------conversion job created-----------------")
             task = exportDSMData.delay(conversion.uuid)
             conversion.task = task.id
             conversion.save()
+            print("--------------dsm data export task started-----------------")
             return JsonResponse({'uuid': conversion.uuid, 'access_token': conversion.access_token})
         except DSMException as e:
             return JsonResponse({'error': str(e)})
-        except Exception:
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            
             return JsonResponse({'error': 'An unexpected error occured'})
 
     def get(self, request, uuid=None):
+        print("--------------getting dsm data-----------------")
         job = DSMConversionJob.objects.filter(uuid=uuid).get()
         if job is None or not job.isRequestAuthorized(request):
             return HttpResponseForbidden()
         job_status = job.getTaskStatus()
+
+        print(f"DSM job status: {job_status}")
         return JsonResponse({
             'status': job_status,
             'error': job.error,

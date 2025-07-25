@@ -101,7 +101,7 @@ Object.keys(center_freq_values).forEach((k: string) => {
 });
 
 const DEFAULT_LINK_FREQ = center_freq_values['5 GHz'];
-const DEFAULT_RADIO_HEIGHT = ft2m(60);
+const DEFAULT_RADIO_HEIGHT = ft2m(30);
 const DEFAULT_RADIO_0_NAME = 'radio_0';
 const DEFAULT_RADIO_1_NAME = 'radio_1';
 
