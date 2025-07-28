@@ -11,7 +11,6 @@ services:
     environment:
       COVERAGE_RCFILE: "/opt/.coveragerc"
       DEBUG: "TRUE"
-      DJANGO_EXTENSIONS: "true" 
     volumes:
       - ./webserver:/usr/src/app
       - ./coverage:/opt/coverage
@@ -22,9 +21,7 @@ services:
     depends_on:
       - static
   websocket-app:
-    # command: watchmedo auto-restart --directory=./ --pattern=*.py --recursive --  daphne -e ssl:8010:privateKey=key.pem:certKey=cert.pem webserver.asgi:application --access-log /dev/stdout
     command: daphne -b 0.0.0.0 -p 8010 webserver.asgi:application
-
     environment:
       DEBUG: "TRUE"
     volumes:
@@ -40,8 +37,13 @@ services:
   flower:
     volumes:
       - ./webserver:/usr/src/app
+
   node-app:
     ports:
       - 8020:8020
+    # volumes:
+    #   - ./node-webserver:/usr/src/app
     volumes:
-      - ./node-webserver:/usr/src/app
+      - ./webserver/static/isptoolbox:/usr/src/app/webserver/static/isptoolbox
+    working_dir: /usr/src/app/webserver/static/isptoolbox
+    command: ["npx", "tsc", "--watch","--preserveWatchOutput"]

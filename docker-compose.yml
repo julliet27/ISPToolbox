@@ -1,6 +1,7 @@
 version: "3.2"
 
 services:
+
   redis:
     build: ./redis
     env_file:
@@ -60,8 +61,11 @@ services:
       - ./webserver:/usr/src/app
       - ./coverage:/opt/coverage
       - ./scripts:/opt/scripts
-    mem_limit: 4g # Limit memory usage to 4GB
-
+  static:
+    command: /bin/sh -c "/usr/src/app/watch_static_dev.sh"
+    build: ./webserver/static
+    volumes:
+      - ./webserver/static:/usr/src/app
 #-----#
   # django-debug:
   #   image: isptoolbox-django

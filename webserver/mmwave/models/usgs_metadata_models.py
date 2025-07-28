@@ -15,9 +15,11 @@ class EPTLidarPointCloudManager(models.Manager):
     """
     This Manager is used to filter out the point clouds that have data / boundary issues
     """
-
+    print("--------EPTLidarPointCloudManager---------")
     def get_queryset(self):
-        return super(EPTLidarPointCloudManager, self).get_queryset().filter(valid=True)
+        tmp=super(EPTLidarPointCloudManager, self).get_queryset().filter(valid=True)
+        print("--------EPTLidarPointCloudManager get_queryset---------", tmp)
+        return tmp
 
 
 class EPTLidarPointCloudManagerAll(models.Manager):
@@ -48,9 +50,11 @@ class EPTLidarPointCloud(models.Model):
             this is a higher resolution boundary that is expensive to produce
         """
     )
+    
     date_time_added_to_isptoolbox = models.DateTimeField(auto_now_add=True)
 
     objects = EPTLidarPointCloudManager()
+    #print("--------high_resolution_boundary---------", objects.high_resolution_boundary)
     objects_include_invalid = EPTLidarPointCloudManagerAll()
 
     valid = models.BooleanField(
@@ -82,6 +86,8 @@ class EPTLidarPointCloud(models.Model):
 
     @classmethod
     def query_intersect_aoi(cls, aoi: GEOSGeometry):
+        print("------------query_intersect_aoi----------", aoi)
+
         query = (
             cls.objects.filter(
                 high_resolution_boundary__isnull=True,
@@ -92,6 +98,8 @@ class EPTLidarPointCloud(models.Model):
                 high_resolution_boundary__intersects=aoi
             )
         )
+        
+        print("------------query-------------------------: ", query.all())
         return query.all()
 
     def admin_url(self):

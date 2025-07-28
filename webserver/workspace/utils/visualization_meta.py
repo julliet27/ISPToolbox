@@ -16,8 +16,9 @@ def get_workspace_potree_visualization_metadata(feature: models.WorkspaceFeature
     geojson = feature.geojson
     if isinstance(feature, models.AccessPointSector):
         geojson = feature.observer
-    clouds = mmwave_models.EPTLidarPointCloud.query_intersect_aoi(
-        geojson)
+    clouds = mmwave_models.EPTLidarPointCloud.query_intersect_aoi(geojson)
+    print("---------------------clouds is empty -----------------------------",clouds)
+    # for this clouds , getting error
     if len(clouds) == 0:
         raise Exception
     clouds = list(clouds)

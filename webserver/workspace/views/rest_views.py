@@ -30,6 +30,10 @@ from django.http import JsonResponse
 import logging
 import json
 
+#-------------------------------------------------
+# to count the number of requests --- Lamia Nurtaj
+cnt=1
+#--------------------------------------------------
 
 # REST Views
 class NetworkDetail(
@@ -117,6 +121,7 @@ class AccessPointLocationListCreate(
         return self.list(request, *args, **kwargs)
 
     def post(self, request, *args, **kwargs):
+        print("Request POST For TOWER:---------------------------", request.data)
         return self.create(request, *args, **kwargs)
 
 
@@ -224,6 +229,9 @@ class PointToPointLinkCreate(
     schema = AutoSchema(tags=["Point To Point"])
 
     def post(self, request, *args, **kwargs):
+        global cnt
+        print("Request POST for POINT :---------------------------",cnt," = ", request.data)
+        cnt += 1
         return self.create(request, *args, **kwargs)
 
 

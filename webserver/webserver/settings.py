@@ -163,12 +163,7 @@ INSTALLED_APPS = [
     "ajax_datatable",
     # htmx
     "django_htmx",
-    # "django_extensions",
 ]
-
-# if os.environ.get("DJANGO_EXTENSIONS", "false").lower() == "true":
-INSTALLED_APPS += ["django_extensions"]
-
 if PROD:
     # SSO
     INSTALLED_APPS += ["djangosaml2"]
@@ -687,4 +682,3 @@ if PROD:
 
 #     ptvsd.enable_attach(address=("0.0.0.0", port))
 #     ptvsd.wait_for_attach()
-

@@ -91,6 +91,7 @@ class EditNetworkView(AllowGuestUserMixin, View):
             "title": "LiDAR LOS Check - ISP Toolbox",
             "tool": "los_check",
             "demo_network_view": False,
-            "MAPBOX_ACCESS_TOKEN_PUBLIC": settings.MAPBOX_ACCESS_TOKEN_PUBLIC, 
+            "MAPBOX_ACCESS_TOKEN_PUBLIC": settings.MAPBOX_ACCESS_TOKEN_PUBLIC,
+             
         }
         return render(request, "workspace/pages/network_edit.html", context)

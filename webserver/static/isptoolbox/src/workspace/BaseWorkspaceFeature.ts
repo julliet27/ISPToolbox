@@ -10,7 +10,7 @@ import { CRUDEvent } from '../utils/IIspToolboxAjaxPlugin';
 
 const BASE_WORKSPACE_SERIALIZED_FIELDS = ['uneditable'];
 const BASE_WORKSPACE_RESPONSE_FIELDS = ['uuid', 'feature_type', 'last_updated', 'uneditable'];
-
+console.log('BaseWorkspaceFeature loaded');
 /**
  * Abstract class for organizing and defining interactions between UI components
  * to be saved in Workspace and the backend
@@ -20,12 +20,12 @@ export abstract class BaseWorkspaceFeature {
     workspaceId: string;
     map: MapboxGL.Map;
     draw: MapboxDraw;
-
+    
     readonly featureType: WorkspaceFeatureTypes;
     private readonly responseFields: Array<string>;
     private readonly serializerFields: Array<string>;
     private readonly apiEndpoint: string;
-
+    featureData: Feature<Geometry, any> | string,
     /**
      * Base constructor for a workspace feature. Sets parameters that will be
      * useful for UI interactions in the future
@@ -61,7 +61,7 @@ export abstract class BaseWorkspaceFeature {
         this.responseFields = responseFields.concat(BASE_WORKSPACE_RESPONSE_FIELDS);
         this.serializerFields = [...BASE_WORKSPACE_SERIALIZED_FIELDS, ...serializedFields];
         this.featureType = featureType;
-
+        this.featureData = featureData;
         let feature = this.draw.get(this.mapboxId);
         // @ts-ignore
         if ('uuid' in feature.properties) {
