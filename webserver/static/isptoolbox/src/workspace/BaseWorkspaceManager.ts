@@ -6,6 +6,7 @@ import { MapboxSDKClient } from '../MapboxSDKClient';
 import { getInitialFeatures } from '../utils/MapDefaults';
 import { BaseWorkspaceFeature } from './BaseWorkspaceFeature';
 import { WorkspaceFeatureTypes } from './WorkspaceConstants';
+import { renderAjaxOperationFailed } from '../utils/ConnectionIssues';
 import {
     AccessPoint,
     CPE,
